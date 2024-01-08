@@ -1,6 +1,10 @@
 from flask import Flask, render_template, request
+import cx_Oracle
 app = Flask(__name__)
 
+def get_db_connection():
+    return cx_Oracle.connect("SYSTEM/Kaskurkad7@localhost:1521/ORCLSS")
+    
 @app.route('/')
 def index():
     return render_template('jauns.html')
@@ -41,6 +45,19 @@ def calculate():
     average_profit = calculate_average_profit(book, cover, volume)
     return f'Vidējā peļņa grāmatai {book}, ar {cover} vāku un apjomu {volume} ir: {average_profit}'
 
+def calculate_max_profit():
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT MAX(PEĻŅA) FROM PASŪTIJUMI")
+    max_profit = cursor.fetchone()[0]
+    cursor.close()
+    connection.close()
+    return max_profit
+
+@app.route('/max_profit')
+def show_max_profit():
+    max_profit = calculate_max_profit()
+    return f'Maksimālā peļņa ir: {max_profit}'
 
 if __name__ == "__main__":
     app.run(debug=True)
